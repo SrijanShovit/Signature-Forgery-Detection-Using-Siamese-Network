@@ -1,0 +1,34 @@
+import torch
+import matplotlib.pyplot as plt
+
+def sanity_check_loader(loader, split_name: str):
+    batch = next(iter(loader))
+    img1, img2, labels = batch
+
+    print(f"\n===== {split_name.upper()} SANITY CHECK =====")
+    print("img1 shape:", img1.shape)
+    print("img2 shape:", img2.shape)
+    print("labels shape:", labels.shape)
+    print("dtype:", img1.dtype)
+    print("unique labels:", torch.unique(labels))
+
+    assert img1.shape == img2.shape, "Image pairs shape mismatch"
+    assert img1.shape[1] in (1, 3), "Images should have C=1 or C=3"
+    assert labels.ndim == 1, "Labels should be 1D"
+    assert set(labels.tolist()).issubset({0.0, 1.0}), "Labels must be 0 or 1"
+
+    print(f"{split_name} sanity passed.")
+
+    # visualize samples
+    for i in range(min(3, len(labels))):
+        fig, ax = plt.subplots(1, 2)
+
+        if img1.shape[1] == 1:  # grayscale
+            ax[0].imshow(img1[i].squeeze().cpu(), cmap="gray")
+            ax[1].imshow(img2[i].squeeze().cpu(), cmap="gray")
+        else:  # RGB
+            ax[0].imshow(img1[i].permute(1, 2, 0).cpu())
+            ax[1].imshow(img2[i].permute(1, 2, 0).cpu())
+
+        fig.suptitle(f"{split_name} | Label: {labels[i].item()}")
+        plt.show()

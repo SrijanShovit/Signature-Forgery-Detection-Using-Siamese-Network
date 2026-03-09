@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+
+/data
+
+# Model checkpoints
+*.ckpt
+*.pth
+*.pt
+**/siamese-epoch*
+**/epoch*
