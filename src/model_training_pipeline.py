@@ -321,13 +321,28 @@ class TripletSiameseModel(L.LightningModule):
             return z_a[topk_idx], z_p[topk_idx], z_n[topk_idx]
         else:
             return z_a, z_p, z_n
+        
+    # -------------------- Semi Hard Mining --------------------
+    def _select_semi_hard_triplets(self, z_a, z_p, z_n):
+        pos_dist = F.pairwise_distance(z_a, z_p, p=2)
+        neg_dist = F.pairwise_distance(z_a, z_n, p=2)
+
+        # Semi-hard condition
+        mask = (neg_dist > pos_dist) & (neg_dist < pos_dist + self.margin)
+
+        if mask.sum() > 0:
+            idx = torch.where(mask)[0]
+            return z_a[idx], z_p[idx], z_n[idx]
+        else:
+            # fallback: if no semi-hard triplets exist use full batch
+            return z_a, z_p, z_n
 
     
     # -------------------- Training Step --------------------
     def training_step(self, batch, batch_idx):
         z_a, z_p, z_n = self.forward(batch)
 
-        z_a_sel, z_p_sel, z_n_sel = self._select_hard_triplets(z_a, z_p, z_n)
+        z_a_sel, z_p_sel, z_n_sel = self._select_semi_hard_triplets(z_a, z_p, z_n)
         loss, pos_dist, neg_dist = self.triplet_loss(z_a_sel, z_p_sel, z_n_sel)
 
         self.train_loss_metric.update(loss)
@@ -351,7 +366,7 @@ class TripletSiameseModel(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         z_a, z_p, z_n = self.forward(batch)
 
-        z_a_sel, z_p_sel, z_n_sel = self._select_hard_triplets(z_a, z_p, z_n)
+        z_a_sel, z_p_sel, z_n_sel = self._select_semi_hard_triplets(z_a, z_p, z_n)
         loss, pos_dist, neg_dist = self.triplet_loss(z_a_sel, z_p_sel, z_n_sel)
 
         self.val_loss_metric.update(loss)
