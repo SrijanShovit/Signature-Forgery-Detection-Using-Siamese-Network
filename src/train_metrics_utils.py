@@ -131,3 +131,48 @@ def load_lightning_metrics(logger_csv_path: str):
             metrics['val_acc'].append(None)
 
     return metrics
+
+
+def plot_triplet_training_metrics(csv_path: str):
+    df = pd.read_csv(csv_path)
+
+    # separate train / val rows
+    train_df = df[df["train_loss"].notna()].copy()
+    val_df = df[df["val_loss"].notna()].copy()
+    lr_df = df[df["lr"].notna()].copy()
+
+    # group by epoch (Lightning logs multiple rows per epoch)
+    train_df = train_df.groupby("epoch").mean(numeric_only=True).reset_index()
+    val_df = val_df.groupby("epoch").mean(numeric_only=True).reset_index()
+    lr_df = lr_df.groupby("epoch").mean(numeric_only=True).reset_index()
+
+    # ---- Loss plot ----
+    plt.figure()
+    plt.plot(train_df["epoch"], train_df["train_loss"], marker="o", label="Train Loss")
+    plt.plot(val_df["epoch"], val_df["val_loss"], marker="o", label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Triplet Training Loss")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # ---- Triplet violation plot ----
+    plt.figure()
+    plt.plot(train_df["epoch"], train_df["train_triplet_violation"], marker="o", label="Train Violation")
+    plt.plot(val_df["epoch"], val_df["val_triplet_violation"], marker="o", label="Validation Violation")
+    plt.xlabel("Epoch")
+    plt.ylabel("Triplet Violation Rate")
+    plt.title("Triplet Violation Rate During Training")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+    # ---- Learning rate plot ----
+    plt.figure()
+    plt.plot(lr_df["epoch"], lr_df["lr"], marker="o")
+    plt.xlabel("Epoch")
+    plt.ylabel("Learning Rate")
+    plt.title("Learning Rate Schedule")
+    plt.grid(True)
+    plt.show()

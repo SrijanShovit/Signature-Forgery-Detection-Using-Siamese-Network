@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import lightning as L
-from torchmetrics.classification import BinaryAccuracy, BinaryAUROC, MeanMetric
+from torchmetrics.classification import BinaryAccuracy, BinaryAUROC
+from torchmetrics import MeanMetric
 import torchvision.models as models
 
 class SiameseModel(L.LightningModule):
