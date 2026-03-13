@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import torch
+from sklearn.metrics import confusion_matrix, classification_report
 import numpy as np
 
 def find_best_threshold(pos_dist, neg_dist):
@@ -23,6 +23,42 @@ def find_best_threshold(pos_dist, neg_dist):
             best_t = t
 
     return best_t, best_acc
+
+
+
+
+def evaluate_with_best_threshold(pos_dist, neg_dist):
+
+    pos = pos_dist.cpu().numpy()
+    neg = neg_dist.cpu().numpy()
+
+    # find best threshold
+    best_t, best_acc = find_best_threshold(pos_dist, neg_dist)
+
+    # labels
+    y_true = np.concatenate([
+        np.ones(len(pos)),   # genuine
+        np.zeros(len(neg))   # forged
+    ])
+
+    # distances
+    distances = np.concatenate([pos, neg])
+
+    # predictions
+    y_pred = (distances < best_t).astype(int)
+
+    # confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+
+    print("Best threshold:", best_t)
+    print("Best accuracy:", best_acc)
+    print("\nConfusion Matrix:")
+    print(cm)
+
+    print("\nClassification Report:")
+    print(classification_report(y_true, y_pred))
+
+    return cm
 
 def plot_triplet_distance_distributions(pos_dist, neg_dist, bins=50):
     """
