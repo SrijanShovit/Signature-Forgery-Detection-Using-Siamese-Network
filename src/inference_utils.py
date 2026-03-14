@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report
 import numpy as np
+import torch
+from pytorch_grad_cam.utils.image import show_cam_on_image
+
 
 def find_best_threshold(pos_dist, neg_dist):
     pos = pos_dist.numpy()
@@ -80,4 +83,62 @@ def plot_triplet_distance_distributions(pos_dist, neg_dist, bins=50):
     plt.legend()
     plt.grid(True)
 
+    plt.show()
+
+
+
+
+# ----------------------------
+# UTILS
+# ----------------------------
+def tensor_to_numpy(t):
+    img = t.squeeze().detach().cpu().numpy()
+
+    if img.shape[0] in [1,3]:
+        img = np.transpose(img, (1,2,0))
+
+    img = img - img.min()
+    img = img / (img.max() + 1e-8)
+
+    return img
+
+# ----------------------------
+# VISUALIZATION FUNCTION
+# ----------------------------
+def visualize_triplet(device, model, triplet, cam, idx):
+
+    anchor, positive, negative = triplet
+
+    # take first image from batch
+    anchor = anchor[0:1].to(device)
+    positive = positive[0:1].to(device)
+    negative = negative[0:1].to(device)
+
+    model.eval()
+
+    with torch.no_grad():
+        z_a = model.forward_once(anchor)
+        z_p = model.forward_once(positive)
+        z_n = model.forward_once(negative)
+
+        dist_ap = torch.norm(z_a - z_p, dim=1).item()
+        dist_an = torch.norm(z_a - z_n, dim=1).item()
+
+    imgs = [anchor, positive, negative]
+    titles = ["Anchor", "Positive", "Negative"]
+
+    fig, axes = plt.subplots(1,3,figsize=(12,4))
+
+    for i, img in enumerate(imgs):
+
+        grayscale_cam = cam(input_tensor=img)[0]
+
+        rgb = tensor_to_numpy(img)
+        overlay = show_cam_on_image(rgb, grayscale_cam, use_rgb=True)
+
+        axes[i].imshow(overlay)
+        axes[i].set_title(titles[i])
+        axes[i].axis("off")
+
+    plt.suptitle(f"Triplet {idx} | AP: {dist_ap:.3f} | AN: {dist_an:.3f}")
     plt.show()

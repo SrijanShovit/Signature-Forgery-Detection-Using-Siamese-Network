@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "albumentations>=2.0.8",
+    "grad-cam>=1.5.5",
     "ipykernel>=7.2.0",
     "ipywidgets>=8.1.8",
     "lightning>=2.6.1",
@@ -18,6 +19,8 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "rich>=14.3.3",
     "scikit-learn>=1.8.0",
+    "streamlit>=1.55.0",
     "torch>=2.10.0",
+    "torchcam>=0.3.1",
     "torchvision>=0.25.0",
 ]
