@@ -2,6 +2,9 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
+from pytorch_grad_cam import GradCAM
+
+from src.inference_utils import EmbeddingWrapper, show_cam_on_image, tensor_to_numpy
 
 
 # ---------------------------------------------------
@@ -82,16 +85,36 @@ def compute_distance(emb1, emb2):
 
 
 # ---------------------------------------------------
+# GRAD CAM Explainability
+# ---------------------------------------------------
+def generate_gradcam(model, img_tensor):
+
+    wrapped = EmbeddingWrapper(model)
+    target_layer = wrapped.model.backbone[7][1].conv2
+
+    cam = GradCAM(
+        model=wrapped,
+        target_layers=[target_layer]
+    )
+
+    grayscale_cam = cam(input_tensor=img_tensor)[0]
+    rgb = tensor_to_numpy(img_tensor)
+    overlay = show_cam_on_image(rgb, grayscale_cam, use_rgb=True)
+
+    return overlay
+
+
+# ---------------------------------------------------
 # VERIFY SIGNATURES
 # ---------------------------------------------------
 
 def verify_signatures(model, img1, img2):
 
-    img1 = preprocess_image(img1)
-    img2 = preprocess_image(img2)
+    img1_tensor = preprocess_image(img1)
+    img2_tensor = preprocess_image(img2)
 
-    emb1 = get_embedding(model, img1)
-    emb2 = get_embedding(model, img2)
+    emb1 = get_embedding(model, img1_tensor)
+    emb2 = get_embedding(model, img2_tensor)
 
     distance = compute_distance(emb1, emb2)
     same = distance < THRESHOLD
@@ -99,5 +122,7 @@ def verify_signatures(model, img1, img2):
     return {
         "distance": float(distance),
         "threshold": THRESHOLD,
-        "same_signature": bool(same)
+        "same_signature": bool(same),
+        "img1_tensor": img1_tensor,
+        "img2_tensor": img2_tensor
     }

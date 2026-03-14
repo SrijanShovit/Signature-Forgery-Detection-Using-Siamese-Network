@@ -86,7 +86,18 @@ def plot_triplet_distance_distributions(pos_dist, neg_dist, bins=50):
     plt.show()
 
 
+# ----------------------------
+# GRAD CAM UTILS
+# ----------------------------
+# Wrapper created because the original model expects triplet inputs, but Grad-CAM requires a single-image forward pass.
+# This wrapper exposes the single-image embedding (forward_once) as a normal forward pass.
+class EmbeddingWrapper(torch.nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
 
+    def forward(self, x):
+        return self.model.forward_once(x)
 
 # ----------------------------
 # UTILS
