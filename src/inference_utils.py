@@ -59,7 +59,7 @@ def evaluate_with_best_threshold(pos_dist, neg_dist):
     print(cm)
 
     print("\nClassification Report:")
-    print(classification_report(y_true, y_pred))
+    print(classification_report(y_true, y_pred,digits=4))
 
     return cm
 

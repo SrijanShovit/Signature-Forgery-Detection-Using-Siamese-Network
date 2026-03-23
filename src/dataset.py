@@ -176,52 +176,52 @@ class TripletSignatureDataset(Dataset):
             img = self.transform(img)
         return img
 
-    # def __getitem__(self, idx):
-    #     # ---------------- Anchor & Positive ----------------
-    #     pid = self.rng.choice(list(self.data_index.keys()))
-    #     person_data = self.data_index[pid]
-    #     anchor_path, positive_path = self.rng.sample(person_data["real"], 2)
-
-    #     # ---------------- Negative ----------------
-    #     if self.rng.random() < 0.5 and len(person_data["forged"]) > 0:
-    #         negative_path = self.rng.choice(person_data["forged"])
-    #     else:
-    #         # Real signature from a different person
-    #         pid2 = self.rng.choice([p for p in self.person_ids if p != pid])
-    #         negative_path = self.rng.choice(self.data_index[pid2]["real"])
-
-    #     anchor = self._load_image(anchor_path)
-    #     positive = self._load_image(positive_path)
-    #     negative = self._load_image(negative_path)
-
-    #     return anchor, positive, negative
-
     def __getitem__(self, idx):
         # ---------------- Anchor & Positive ----------------
         pid = self.rng.choice(list(self.data_index.keys()))
         person_data = self.data_index[pid]
-        
-        # Ensure there are at least 2 real signatures
         anchor_path, positive_path = self.rng.sample(person_data["real"], 2)
 
         # ---------------- Negative ----------------
-        negative_path = None
-        has_forged = len(person_data.get("forged", [])) > 0
-
-        if has_forged:
-            # 80% chance to pick same-person forgery, 20% other-person real
-            if self.rng.random() < 0.8:
-                negative_path = self.rng.choice(person_data["forged"])
-        
-        if negative_path is None:
-            # Pick a real signature from a different person
-            other_pids = [p for p in self.person_ids if p != pid]
-            pid2 = self.rng.choice(other_pids)
+        if self.rng.random() < 0.5 and len(person_data["forged"]) > 0:
+            negative_path = self.rng.choice(person_data["forged"])
+        else:
+            # Real signature from a different person
+            pid2 = self.rng.choice([p for p in self.person_ids if p != pid])
             negative_path = self.rng.choice(self.data_index[pid2]["real"])
 
-        # ---------------- Load Images ----------------
         anchor = self._load_image(anchor_path)
         positive = self._load_image(positive_path)
         negative = self._load_image(negative_path)
 
         return anchor, positive, negative
+
+    # def __getitem__(self, idx):
+    #     # ---------------- Anchor & Positive ----------------
+    #     pid = self.rng.choice(list(self.data_index.keys()))
+    #     person_data = self.data_index[pid]
+        
+    #     # Ensure there are at least 2 real signatures
+    #     anchor_path, positive_path = self.rng.sample(person_data["real"], 2)
+
+    #     # ---------------- Negative ----------------
+    #     negative_path = None
+    #     has_forged = len(person_data.get("forged", [])) > 0
+
+    #     if has_forged:
+    #         # 80% chance to pick same-person forgery, 20% other-person real
+    #         if self.rng.random() < 0.8:
+    #             negative_path = self.rng.choice(person_data["forged"])
+        
+    #     if negative_path is None:
+    #         # Pick a real signature from a different person
+    #         other_pids = [p for p in self.person_ids if p != pid]
+    #         pid2 = self.rng.choice(other_pids)
+    #         negative_path = self.rng.choice(self.data_index[pid2]["real"])
+
+    #     # ---------------- Load Images ----------------
+    #     anchor = self._load_image(anchor_path)
+    #     positive = self._load_image(positive_path)
+    #     negative = self._load_image(negative_path)
+
+    #     return anchor, positive, negative
